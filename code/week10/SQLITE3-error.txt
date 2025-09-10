@@ -1,0 +1,9 @@
+If there is an sqlite3 error:
+
+!pip3.9 install pysqlite3-binary
+
+# + add below lines to LLM-RAG.py script (top)
+
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
