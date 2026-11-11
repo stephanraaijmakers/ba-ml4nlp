@@ -2,7 +2,13 @@ import os
 import torch
 from torch.nn import functional as F
 import string
-from transformers import pipeline, BertTokenizer, BertForMaskedLM, AutoModelForCausalLM, OpenAIGPTModel,AutoModelWithLMHead, AutoTokenizer, top_k_top_p_filtering, logging, AutoModelForSeq2SeqLM, set_seed
+from transformers import pipeline, BertTokenizer, BertForMaskedLM, AutoModelForCausalLM, OpenAIGPTModel, AutoTokenizer, logging, AutoModelForSeq2SeqLM, set_seed
+
+
+def top_k_filter(logits, top_k):
+  # replaces transformers' top_k_top_p_filtering (removed); top_p was 1.0, so only top-k applies
+  kth_best = torch.topk(logits, top_k).values[..., -1, None]
+  return logits.masked_fill(logits < kth_best, -float('inf'))
 
 
 logging.set_verbosity_error()
@@ -28,7 +34,7 @@ def load_model(model_name):
       return bert_tokenizer,bert_model
     elif model_name.lower() == "gpt":
       gpt_tokenizer = AutoTokenizer.from_pretrained("gpt2")
-      gpt_model = AutoModelWithLMHead.from_pretrained("gpt2")
+      gpt_model = AutoModelForCausalLM.from_pretrained("gpt2")
       return gpt_tokenizer,gpt_model
     elif model_name.lower() == "gpt3":
       gpt_tokenizer = AutoTokenizer.from_pretrained("openai-gpt")
@@ -64,7 +70,7 @@ def encode_gpt(tokenizer, text_sentence, add_special_tokens=False):
 
 # gpt decode
 def decode_gpt(tokenizer, input_ids, pred, top_clean):
-  filtered_next_token_logits = top_k_top_p_filtering(pred, top_k=top_clean, top_p=1.0)
+  filtered_next_token_logits = top_k_filter(pred, top_k=top_clean)
 
   # sample
   probs = F.softmax(filtered_next_token_logits, dim=-1)
@@ -126,11 +132,11 @@ select_model=input('Choose a model (bert, gpt2): ')
 
 while True:
   if select_model.lower() == "bert":
-    prompt=input('Input: ').rstrip()
+    prompt=input('Input (# = exit):').rstrip()
     if prompt=="switch":
         select_model=input('Choose a model (bert, gpt2): ')
         continue
-    if prompt=="stop":
+    if prompt=="#":
       break
     nb_completions=int(input('How many words should I generate? '))
     answer_bert = prompt.split(" ")
@@ -144,15 +150,18 @@ while True:
     print("Generated text:",' '.join(answer_bert))
 
   elif select_model.lower() == "gpt2":
-    prompt=input('Input: ').rstrip()
+    prompt=input('Input (# = exit):').rstrip()
     if prompt=="switch":
         select_model=input('Choose a model (bert, gpt2): ')
         continue
-    if prompt=="stop":
+    if prompt=="#":
       break
     nb_completions=int(input('How many words should I generate? '))
     inputs = tokenizer_gpt2(prompt, return_tensors="pt")
-    outputs = model_gpt2.generate(**inputs, penalty_alpha=0.6, top_k=4, max_new_tokens=nb_completions+1)
+    # contrastive search moved to the Hub in transformers >= 4.56 (needs internet, runs downloaded code)
+    outputs = model_gpt2.generate(**inputs, penalty_alpha=0.6, top_k=4, max_new_tokens=nb_completions,
+                                  custom_generate="transformers-community/contrastive-search",
+                                  trust_remote_code=True)
     answer=tokenizer_gpt2.batch_decode(outputs, skip_special_tokens=True)
     print("Generated text:",answer)
 

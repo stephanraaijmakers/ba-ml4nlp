@@ -36,16 +36,15 @@ enter_input_text=""
 while enter_input_text!="#":
   print("\n#################### Unmasking with BERT #################\n")
   enter_input_text=input('Enter a sentence, use [MASK] for masking words (type # to stop): ').rstrip()
+  added_dot=False
   if enter_input_text.split(" ")[-1]=="[MASK]":
-    enter_input_text+=" [MASK]" # preventing punctuation predictions for final mask
+    enter_input_text+=" ." # preventing punctuation predictions for final mask
+    added_dot=True
   while "[MASK]" in enter_input_text:
     unmasking=unmask_sent(enter_input_text, tokenizer, model)
-    words=enter_input_text.split(" ")
-    for i in range(len(words)):
-      if words[i]=="[MASK]":
-        words[i]=unmasking
-        break
-    enter_input_text=' '.join(words)
+    enter_input_text=enter_input_text.replace("[MASK]", unmasking, 1)  # also matches "[MASK]?"
+  if added_dot:
+    enter_input_text=enter_input_text[:-2]
   if enter_input_text!="#":
     print("\nUnmasked:", enter_input_text)
 
