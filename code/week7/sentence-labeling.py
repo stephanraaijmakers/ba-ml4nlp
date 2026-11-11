@@ -1,5 +1,5 @@
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+#from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -9,10 +9,10 @@ from tensorflow.keras.preprocessing.text import one_hot
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 import sys
-import itertools
-from sklearn.utils import class_weight
+#import itertools
+#from sklearn.utils import class_weight
 import re
-import Levenshtein as lev
+#import levenshtein as lev # pip install levenshtein
 from tqdm import tqdm
 
 
