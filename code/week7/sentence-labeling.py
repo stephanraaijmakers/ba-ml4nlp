@@ -4,23 +4,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation, Dropout, Flatten, LSTM, Embedding
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.text import one_hot
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
 import sys
-#import itertools
-#from sklearn.utils import class_weight
-import re
-#import levenshtein as lev # pip install levenshtein
 from tqdm import tqdm
-
-
-from transformers import AutoModelWithLMHead, AutoTokenizer
-
-#https://huggingface.co/mrm8488/t5-base-finetuned-e2m-intent
-tokenizer = AutoTokenizer.from_pretrained("mrm8488/t5-base-finetuned-e2m-intent")
-intent_model = AutoModelWithLMHead.from_pretrained("mrm8488/t5-base-finetuned-e2m-intent")
 
 
 def featurize_data(sentences): 
