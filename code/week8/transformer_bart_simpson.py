@@ -8,7 +8,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers import TextVectorization
 
-
+# Stephan Raaijmakers, patched 2026 for Keras 3.0/TF>2.16
 
 
 print("####################################################################################")
@@ -194,6 +194,9 @@ class PositionalEmbedding(layers.Layer):
         return embedded_tokens + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
+        # Keras 3 calls compute_mask with symbolic KerasTensors, so tf.* ops fail here
+        if hasattr(keras, "ops"):
+            return keras.ops.not_equal(inputs, 0)
         return tf.math.not_equal(inputs, 0)
 
     def get_config(self):
