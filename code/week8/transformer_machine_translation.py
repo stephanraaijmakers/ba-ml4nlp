@@ -211,8 +211,9 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
+        padding_mask = None  # Keras 3 may trace call() without a mask
         if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype="int32")
+            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
         attention_output = self.attention(
             query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
         )
@@ -273,6 +274,7 @@ class TransformerDecoder(layers.Layer):
 
     def call(self, inputs, encoder_outputs, mask=None):
         causal_mask = self.get_causal_attention_mask(inputs)
+        padding_mask = None  # Keras 3 may trace call() without a mask
         if mask is not None:
             padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
             padding_mask = tf.minimum(padding_mask, causal_mask)
